@@ -17,10 +17,10 @@ public class Rasterer {
     private int startY;
     private int endX;
     private int endY;
-    private double raster_ul_lon;
-    private double raster_ul_lat;
-    private double raster_lr_lon;
-    private double raster_lr_lat;
+    private double rasterULLON;
+    private double rasterULLAT;
+    private double rasterLRLON;
+    private double rasterLRLAT;
 
     public Rasterer() {
     }
@@ -58,17 +58,17 @@ public class Rasterer {
         System.out.println(params);
 
         /* Extract coordinates and box size from user requested query */
-        double lr_lon = params.get("lrlon");
-        double ul_lon = params.get("ullon");
-        double lr_lat = params.get("lrlat");
-        double ul_lat = params.get("ullat");
+        double queryLRLON = params.get("lrlon");
+        double queryULLON = params.get("ullon");
+        double queryLRLAT = params.get("lrlat");
+        double queryULLAT = params.get("ullat");
         double width = params.get("w");
 
         /* Calculate coordinates and determine which image files are needed for the
         query that will be sent ot the front end.
          */
-        depth = calculateDepth(calculateLonDPP(lr_lon, ul_lon, width));
-        coordinates = calculateStartXY(lr_lon, ul_lon, ul_lat, lr_lat);
+        depth = calculateDepth(calculateLonDPP(queryLRLON, queryULLON, width));
+        coordinates = calculateStartXY(queryLRLON, queryULLON, queryLRLAT, queryULLAT);
         String[][] renderGrid = getFileNames();
         setRasterCoords();
 
@@ -76,25 +76,25 @@ public class Rasterer {
         This data will be interpreted and displayed as an image in the web browser.
          */
         results.put("render_grid", renderGrid);
-        results.put("raster_ul_lon", raster_ul_lon);
-        results.put("raster_ul_lat", raster_ul_lat);
-        results.put("raster_lr_lon", raster_lr_lon);
-        results.put("raster_lr_lat", raster_lr_lat);
+        results.put("raster_ul_lon", rasterULLON);
+        results.put("raster_ul_lat", rasterULLAT);
+        results.put("raster_lr_lon", rasterLRLON);
+        results.put("raster_lr_lat", rasterLRLAT);
         results.put("depth", depth);
-        results.put("query_success", querySuccess(ul_lon, lr_lon, ul_lat, lr_lat));
+        results.put("query_success", querySuccess(queryLRLON, queryULLON, queryLRLAT, queryULLAT));
         return results;
     }
 
     /**
      * Calculates the longitudinal distance per pixel of a query box or image.
-     * @param lr_lon
-     * @param ul_lon
+     * @param lrLON
+     * @param ulLON
      * @param width
      * @return
      */
-    private double calculateLonDPP(double lr_lon, double ul_lon, double width) {
-        double LonDDP = (lr_lon - ul_lon) / width;
-        return LonDDP;
+    private double calculateLonDPP(double lrLON, double ulLON, double width) {
+        double lonDDP = (lrLON - ulLON) / width;
+        return lonDDP;
     }
 
     /**
@@ -125,28 +125,28 @@ public class Rasterer {
      * images that contain the requested query. startX and startY are the coordinates of the
      * upper-left image. endX and endY are the coordinates of the upper-right image.
      * are the coordinates
-     * @param lr_lon
-     * @param ul_lon
-     * @param ul_lat
-     * @param lr_lat
+     * @param lrLON
+     * @param ulLON
+     * @param ulLAT
+     * @param lrLAT
      * @return
      */
-    private int[] calculateStartXY(double lr_lon, double ul_lon, double ul_lat, double lr_lat) {
+    private int[] calculateStartXY(double lrLON, double ulLON, double lrLAT, double ulLAT) {
         int numOfTiles = (int) Math.pow(2.0, depth);
         int lastTile = (int) Math.pow(2.0, depth) - 1;
         double tileWidth = TOTALLONWIDTH / numOfTiles;
         double tileHeight = TOTALLATHEIGHT / numOfTiles;
-        startX = (int) Math.floor((ul_lon - MapServer.ROOT_ULLON) / tileWidth);
-        startY = (int) Math.floor((MapServer.ROOT_ULLAT - ul_lat) / tileHeight);
-        endX = lastTile - (int) Math.floor((MapServer.ROOT_LRLON - lr_lon) / tileWidth);
-        endY = lastTile - (int) Math.floor((lr_lat - MapServer.ROOT_LRLAT) / tileHeight);
+        startX = (int) Math.floor((ulLON - MapServer.ROOT_ULLON) / tileWidth);
+        startY = (int) Math.floor((MapServer.ROOT_ULLAT - ulLAT) / tileHeight);
+        endX = lastTile - (int) Math.floor((MapServer.ROOT_LRLON - lrLON) / tileWidth);
+        endY = lastTile - (int) Math.floor((lrLAT - MapServer.ROOT_LRLAT) / tileHeight);
         coordinates = new int[]{startX, startY, endX, endY};
         return coordinates;
     }
 
     /**
-     * Stores the filenames of images in a String[][]. Images are named as such: "d2_x3_y1.png", where
-     * '2' is the level of depth, '3' is the x coordinate, and '1' is the y coordinate.
+     * Stores the filenames of images in a String[][]. Images are named as such: "d2_x3_y1.png",
+     * where '2' is the level of depth, '3' is the x coordinate, and '1' is the y coordinate.
      * @return
      */
     private String[][] getFileNames() {
@@ -168,10 +168,10 @@ public class Rasterer {
         int numOfTiles = (int) (Math.pow(2.0, depth));
         double tileWidth = TOTALLONWIDTH / numOfTiles;
         double tileHeight = TOTALLATHEIGHT / numOfTiles;
-        raster_ul_lon = MapServer.ROOT_ULLON + (tileWidth * (startX));
-        raster_ul_lat = MapServer.ROOT_ULLAT - (tileHeight * startY);
-        raster_lr_lon = MapServer.ROOT_LRLON - (tileWidth * (numOfTiles - 1 - endX));
-        raster_lr_lat = MapServer.ROOT_LRLAT + (tileHeight * (numOfTiles - 1 - endY));
+        rasterULLON = MapServer.ROOT_ULLON + (tileWidth * (startX));
+        rasterULLAT = MapServer.ROOT_ULLAT - (tileHeight * startY);
+        rasterLRLON = MapServer.ROOT_LRLON - (tileWidth * (numOfTiles - 1 - endX));
+        rasterLRLAT = MapServer.ROOT_LRLAT + (tileHeight * (numOfTiles - 1 - endY));
     }
 
     /**
@@ -179,21 +179,17 @@ public class Rasterer {
      * If the query box is completely outside of the root longitude/latitudes,
      * this method will return false. It also returns false if the query box
      * coordinates are nonsensical.
-     * @param ul_lon
-     * @param lr_lon
-     * @param ul_lat
-     * @param lr_lat
+     * @param lrLON
+     * @param ulLON
+     * @param lrLAT
+     * @param ulLAT
      * @return
      */
-    private boolean querySuccess(double ul_lon, double lr_lon, double ul_lat, double lr_lat) {
-        if (ul_lat < lr_lat || ul_lon > lr_lon) {
+    private boolean querySuccess(double lrLON, double ulLON, double lrLAT, double ulLAT) {
+        if (ulLAT < lrLAT || ulLON > lrLON) {
             return false;
         }
-        if (ul_lon < MapServer.ROOT_ULLON || lr_lon > MapServer.ROOT_LRLON
-                || ul_lat > MapServer.ROOT_ULLAT || lr_lat < MapServer.ROOT_LRLON) {
-            return false;
-        } else {
-            return true;
-        }
+        return !(ulLON < MapServer.ROOT_ULLON || lrLON > MapServer.ROOT_LRLON
+                || ulLAT > MapServer.ROOT_ULLAT || lrLAT < MapServer.ROOT_LRLON);
     }
 }
