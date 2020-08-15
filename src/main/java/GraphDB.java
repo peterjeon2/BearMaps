@@ -1,3 +1,4 @@
+
 import org.xml.sax.SAXException;
 
 import java.io.File;
@@ -6,7 +7,8 @@ import java.io.IOException;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
-import java.util.ArrayList;
+import java.lang.reflect.Array;
+import java.util.*;
 
 /**
  * Graph for storing all of the intersection (vertex) and road (edge) information.
@@ -20,6 +22,9 @@ import java.util.ArrayList;
 public class GraphDB {
     /** Your instance variables for storing the graph. You should consider
      * creating helper classes, e.g. Node, Edge, etc. */
+    private Map<Long, Node> vertices;
+    private Map<Long, HashSet<Long>> adj;
+
 
     /**
      * Example constructor shows how to create and start an XML parser.
@@ -28,6 +33,8 @@ public class GraphDB {
      */
     public GraphDB(String dbPath) {
         try {
+            vertices = new HashMap<>();
+            adj = new HashMap<>();
             File inputFile = new File(dbPath);
             FileInputStream inputStream = new FileInputStream(inputFile);
             // GZIPInputStream stream = new GZIPInputStream(inputStream);
@@ -40,6 +47,138 @@ public class GraphDB {
             e.printStackTrace();
         }
         clean();
+    }
+
+    static class Node implements Comparable<Node> {
+        Long id;
+        Double lon;
+        Double lat;
+        String name;
+        double f;
+        int shortestPathDist;
+        double distFromDest;
+        private Node prevVertex;
+
+        Node(Long id, Double lon, Double lat) {
+            this.id = id;
+            this.lon = lon;
+            this.lat = lat;
+        }
+
+        public boolean equals(Node otherNode) {
+            if (otherNode == null) {
+                return false;
+            }
+            if (this == otherNode) {
+                return true;
+            }
+            if (this.id != otherNode.id || this.lon != otherNode.lon || this.lat != otherNode.lat) {
+                return false;
+            }
+            return true;
+        }
+
+        public int compareTo(Node otherNode) {
+            if (this.f < otherNode.f) {
+                return -1;
+            } else if (this.f > otherNode.f) {
+                return 1;
+            } else {
+                return 0;
+            }
+        }
+
+        public void setMovesTaken(int n) {
+            shortestPathDist = n;
+        }
+
+        public void setCircleDistance(Double distance) {
+            distFromDest = distance;
+        }
+
+        public void setPrevVertex(Node n) {
+            this.prevVertex = n;
+        }
+
+        public Node getPrevVertex() {
+            return prevVertex;
+        }
+        public double getdistFromDet() {
+            return distFromDest;
+        }
+
+        public int getMovesTaken() {
+            return shortestPathDist;
+        }
+
+        public void calculateF() {
+            this.f = this.shortestPathDist + this.distFromDest;
+        }
+
+    }
+
+    static class Way {
+        ArrayList<Long> nodeIds;
+        Long wayID;
+        String name;
+        String maxSpeed;
+
+        Way(Long id) {
+            this.wayID = id;
+            nodeIds = new ArrayList<>();
+        }
+
+        public void addWay(Long id) {
+            nodeIds.add(id);
+        }
+
+        public void setName(String n) {
+            this.name = n;
+        }
+
+        public void setSpeed(String s) {
+            this.maxSpeed = s;
+        }
+    }
+
+    public Map<Long, Node> getVertices() {
+        return vertices;
+    }
+
+
+    public void addNode(Long id, Double lon, Double lat) {
+        vertices.put(id, new Node(id, lon, lat));
+    }
+
+    public void addEdge(Node n1, Node n2) {
+        if (adj.containsKey(n1.id)) {
+            HashSet<Long> adjacent = adj.get(n1.id);
+            adjacent.add(n2.id);
+        } else {
+            adj.put(n1.id, new HashSet<>());
+            HashSet<Long> adjacent = adj.get(n1.id);
+            adjacent.add(n2.id);
+        }
+    }
+
+    public void removeNode(Long id){
+        vertices.remove(id);
+        adj.remove(id);
+    }
+
+    public void setName(Long id, String n){
+        Node thisNode = vertices.get(id);
+        thisNode.name = n;
+    }
+
+    public void addWay(Way way) {
+        for (int i = 0; i < way.nodeIds.size() - 1; i++) {
+            Long curr = way.nodeIds.get(i);
+            Long next = way.nodeIds.get(i + 1);
+
+            addEdge(vertices.get(curr), vertices.get(next));
+            addEdge(vertices.get(next), vertices.get(curr));
+        }
     }
 
     /**
@@ -58,6 +197,17 @@ public class GraphDB {
      */
     private void clean() {
         // TODO: Your code here.
+        List<Long> toDelete = new ArrayList<>();
+
+       for (Long vertexID: vertices.keySet()) {
+           if (!adj.containsKey(vertexID)) {
+               toDelete.add(vertexID);
+           }
+       }
+
+       for (Long vertex: toDelete) {
+           removeNode(vertex);
+       }
     }
 
     /**
@@ -65,8 +215,7 @@ public class GraphDB {
      * @return An iterable of id's of all vertices in the graph.
      */
     Iterable<Long> vertices() {
-        //YOUR CODE HERE, this currently returns only an empty list.
-        return new ArrayList<Long>();
+        return vertices.keySet();
     }
 
     /**
@@ -75,7 +224,8 @@ public class GraphDB {
      * @return An iterable of the ids of the neighbors of v.
      */
     Iterable<Long> adjacent(long v) {
-        return null;
+        return adj.get(v);
+
     }
 
     /**
@@ -136,7 +286,17 @@ public class GraphDB {
      * @return The id of the node in the graph closest to the target.
      */
     long closest(double lon, double lat) {
-        return 0;
+        double minDistance = 100000;
+        double currentDistance;
+        long vertexID = 0;
+        for (Node vertex: vertices.values()){
+            currentDistance = distance(lon, lat, vertex.lon, vertex.lat);
+            if (currentDistance < minDistance) {
+                minDistance = currentDistance;
+                vertexID = vertex.id;
+            }
+        }
+        return vertexID;
     }
 
     /**
@@ -145,7 +305,7 @@ public class GraphDB {
      * @return The longitude of the vertex.
      */
     double lon(long v) {
-        return 0;
+        return vertices.get(v).lon;
     }
 
     /**
@@ -154,6 +314,6 @@ public class GraphDB {
      * @return The latitude of the vertex.
      */
     double lat(long v) {
-        return 0;
+        return vertices.get(v).lat;
     }
 }

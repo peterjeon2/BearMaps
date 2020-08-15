@@ -1,5 +1,4 @@
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -25,8 +24,59 @@ public class Router {
      */
     public static List<Long> shortestPath(GraphDB g, double stlon, double stlat,
                                           double destlon, double destlat) {
-        return null; // FIXME
+
+        PriorityQueue<GraphDB.Node> bestMoveSequence = new PriorityQueue<>();
+        LinkedList<Long> shortestPath;
+
+        Long startVertexID = g.closest(stlon, stlat);
+        Long destVertexID = g.closest(destlon, destlat);
+        Map<Long, GraphDB.Node> vertices = g.getVertices();
+        GraphDB.Node currVertex = vertices.get(startVertexID);
+
+        Double distFromEnd = g.distance(startVertexID, destVertexID);
+        currVertex.setCircleDistance(distFromEnd);
+        currVertex.setMovesTaken(0);
+        currVertex.setPrevVertex(null);
+        bestMoveSequence.add(currVertex);
+        GraphDB.Node n;
+        int i = 0;
+
+
+
+        while (!bestMoveSequence.isEmpty()) {
+            currVertex = bestMoveSequence.poll();
+            System.out.println(currVertex.getdistFromDet());
+            i++;
+            if (currVertex.getdistFromDet() < 0.9) {
+                System.out.println(i);
+                break;
+            }
+
+            if (currVertex.id == destVertexID) {
+                break;
+            }
+            for (Long vertex : g.adjacent(currVertex.id)) {
+                n = vertices.get(vertex);
+                if (currVertex.getPrevVertex() == null || !n.equals(currVertex.getPrevVertex())) {
+                    distFromEnd = g.distance(vertex, destVertexID);
+                    n.setCircleDistance(distFromEnd);
+                    n.setMovesTaken(currVertex.getMovesTaken() + 1);
+                    n.setPrevVertex(currVertex);
+                    n.calculateF();
+                    bestMoveSequence.add(n);
+
+                }
+            }
+        }
+        shortestPath = new LinkedList<>();
+        while (currVertex != null) {
+            shortestPath.addFirst(currVertex.id);
+            currVertex = currVertex.getPrevVertex();
+        }
+
+        return shortestPath;
     }
+
 
     /**
      * Create the list of directions corresponding to a route on the graph.
