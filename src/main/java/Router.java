@@ -56,20 +56,25 @@ public class Router {
 
 
         while (currVertex.h != 0.0) {
+            /**
+             * Mark a vertex if it's already been visited, to reduce the number of
+             * times you enqueue it to the priority queue.
+             */
             if (currVertex.marked) {
                 currVertex = bestMoveSequence.poll();
                 continue;
             }
-            currVertex.marked = false;
+            currVertex.marked = true;
 
             for (Long vertexID : g.adjacent(currVertex.id)) {
-                    neighbor = g.returnCopy(vertexID);
-                    double distance = currVertex.g + g.distance(currVertex.id, neighbor.id);
+                neighbor = g.returnCopy(vertexID);
+                double distance = currVertex.g + g.distance(currVertex.id, neighbor.id);
                 /** Adds a neighboring vertex to the priority queue if it's never
                  * been visited before, or if it has the shortest known path distance from
                  * the start location.
                  */
-                if (!shortestDistToNode.containsKey(vertexID) || distance < shortestDistToNode.get(vertexID)) {
+                if (!shortestDistToNode.containsKey(vertexID) ||
+                        distance < shortestDistToNode.get(vertexID)) {
                     shortestDistToNode.put(neighbor.id, distance);
                     neighbor.g = distance;
                     neighbor.h = g.distance(neighbor.id, destID);
