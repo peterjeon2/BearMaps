@@ -22,60 +22,68 @@ public class Router {
      * @param destlat The latitude of the destination location.
      * @return A list of node id's in the order visited on the shortest path.
      */
+
     public static List<Long> shortestPath(GraphDB g, double stlon, double stlat,
                                           double destlon, double destlat) {
 
+        /** Creates bestMoveSequence, a priority queue that will track the best move sequence from
+         * start to end.
+         * prevNode is a map that tracks where a vertex came from. It stores the parent Node of
+         * a location.
+         * shortestDistToNode tracks the best known distance form the source location to
+         * every vertex.
+         */
         PriorityQueue<GraphDB.Node> bestMoveSequence = new PriorityQueue<>();
+        Map<Long, GraphDB.Node> prevNode = new HashMap<>();
+        Map<Long, Double> shortestDistToNode = new HashMap<>();
         LinkedList<Long> shortestPath;
 
-        Long startVertexID = g.closest(stlon, stlat);
-        Long destVertexID = g.closest(destlon, destlat);
-        Map<Long, GraphDB.Node> vertices = g.getVertices();
-        GraphDB.Node currVertex = vertices.get(startVertexID);
+        Long startID = g.closest(stlon, stlat);
+        Long destID = g.closest(destlon, destlat);
+        GraphDB.Node currVertex = g.returnCopy(startID);
 
-        Double distFromEnd = g.distance(startVertexID, destVertexID);
-        currVertex.setCircleDistance(distFromEnd);
-        currVertex.setMovesTaken(0);
-        currVertex.setPrevVertex(null);
+        currVertex.g = 0.0;
+        currVertex.h = g.distance(startID, destID);
+        currVertex.f = currVertex.g + currVertex.h;
+        shortestDistToNode.put(currVertex.id, 0.0);
         bestMoveSequence.add(currVertex);
-        GraphDB.Node n;
-        int i = 0;
+        GraphDB.Node neighbor;
 
 
-
-        while (!bestMoveSequence.isEmpty()) {
+        while (currVertex.h != 0.0) {
             currVertex = bestMoveSequence.poll();
-            System.out.println(currVertex.getdistFromDet());
-            i++;
-            if (currVertex.getdistFromDet() < 0.9) {
-                System.out.println(i);
-                break;
-            }
 
-            if (currVertex.id == destVertexID) {
-                break;
-            }
-            for (Long vertex : g.adjacent(currVertex.id)) {
-                n = vertices.get(vertex);
-                if (currVertex.getPrevVertex() == null || !n.equals(currVertex.getPrevVertex())) {
-                    distFromEnd = g.distance(vertex, destVertexID);
-                    n.setCircleDistance(distFromEnd);
-                    n.setMovesTaken(currVertex.getMovesTaken() + 1);
-                    n.setPrevVertex(currVertex);
-                    n.calculateF();
-                    bestMoveSequence.add(n);
-
-                }
+            for (Long vertexID : g.adjacent(currVertex.id)) {
+                    neighbor = g.returnCopy(vertexID);
+                    double distance = currVertex.g + g.distance(currVertex.id, neighbor.id);
+                /** Adds a neighboring vertex to the priority queue if it's never
+                 * been visited before, or if it has the shortest known path distance from
+                 * the start location.
+                 */
+                if (!shortestDistToNode.containsKey(vertexID) || distance < shortestDistToNode.get(vertexID)) {
+                        shortestDistToNode.put(neighbor.id, distance);
+                        neighbor.g = distance;
+                        neighbor.h = g.distance(neighbor.id, destID);
+                        neighbor.f = neighbor.g + neighbor.h;
+                        prevNode.put(neighbor.id, currVertex);
+                        bestMoveSequence.add(neighbor);
+                    }
             }
         }
+
+        /**
+         * Stores the shorted path in a LinkedList and returns it.
+         */
         shortestPath = new LinkedList<>();
         while (currVertex != null) {
             shortestPath.addFirst(currVertex.id);
-            currVertex = currVertex.getPrevVertex();
+            currVertex = prevNode.get(currVertex.id);
         }
 
         return shortestPath;
     }
+
+
 
 
     /**

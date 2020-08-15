@@ -7,9 +7,11 @@ import java.io.IOException;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
-import java.lang.reflect.Array;
-import java.util.*;
-
+import java.util.HashMap;
+import java.util.Map;
+import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.List;
 /**
  * Graph for storing all of the intersection (vertex) and road (edge) information.
  * Uses your GraphBuildingHandler to convert the XML files into a graph. Your
@@ -54,15 +56,24 @@ public class GraphDB {
         Double lon;
         Double lat;
         String name;
+
+        /** The variable f is the priority of a node.
+         * The variable g is the shortest known path distance from s to the node.
+         * The variable h is the heuristic distance, the distance from the node to
+         * the target location.
+         * f is used in A* search to find the shortest route from the start location
+         * to end location.
+         */
         double f;
-        int shortestPathDist;
-        double distFromDest;
-        private Node prevVertex;
+        double g;
+        double h;
+        boolean marked;
 
         Node(Long id, Double lon, Double lat) {
             this.id = id;
             this.lon = lon;
             this.lat = lat;
+            marked = false;
         }
 
         public boolean equals(Node otherNode) {
@@ -72,10 +83,12 @@ public class GraphDB {
             if (this == otherNode) {
                 return true;
             }
-            if (this.id != otherNode.id || this.lon != otherNode.lon || this.lat != otherNode.lat) {
-                return false;
+
+
+            if (this.id == otherNode.id || this.lon == otherNode.lon || this.lat == otherNode.lat) {
+                return true;
             }
-            return true;
+            return false;
         }
 
         public int compareTo(Node otherNode) {
@@ -87,34 +100,6 @@ public class GraphDB {
                 return 0;
             }
         }
-
-        public void setMovesTaken(int n) {
-            shortestPathDist = n;
-        }
-
-        public void setCircleDistance(Double distance) {
-            distFromDest = distance;
-        }
-
-        public void setPrevVertex(Node n) {
-            this.prevVertex = n;
-        }
-
-        public Node getPrevVertex() {
-            return prevVertex;
-        }
-        public double getdistFromDet() {
-            return distFromDest;
-        }
-
-        public int getMovesTaken() {
-            return shortestPathDist;
-        }
-
-        public void calculateF() {
-            this.f = this.shortestPathDist + this.distFromDest;
-        }
-
     }
 
     static class Way {
@@ -161,9 +146,13 @@ public class GraphDB {
         }
     }
 
-    public void removeNode(Long id){
+    public void removeNode(Long id) {
         vertices.remove(id);
         adj.remove(id);
+    }
+
+    public Node returnCopy(Long id) {
+        return new Node(id, lon(id), lat(id));
     }
 
     public void setName(Long id, String n){
