@@ -57,6 +57,11 @@ public class Router {
 
         while (currVertex.h != 0.0) {
             currVertex = bestMoveSequence.poll();
+            /**
+             * Mark a vertex once you have visited it to reduce the number of times
+             * the same vertex is enqueued onto the priority queue.
+             */
+            currVertex.marked = true;
             for (Long vertexID : g.adjacent(currVertex.id)) {
                 neighbor = g.returnCopy(vertexID);
                 double distance = currVertex.g + g.distance(currVertex.id, neighbor.id);
@@ -65,7 +70,7 @@ public class Router {
                  * the start location.
                  */
                 if (!shortestDistToNode.containsKey(vertexID)
-                        || distance < shortestDistToNode.get(vertexID)) {
+                        || (!neighbor.marked && distance < shortestDistToNode.get(vertexID))) {
                     shortestDistToNode.put(neighbor.id, distance);
                     neighbor.g = distance;
                     neighbor.h = g.distance(neighbor.id, destID);
