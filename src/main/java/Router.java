@@ -1,4 +1,9 @@
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.PriorityQueue;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -51,7 +56,11 @@ public class Router {
 
 
         while (currVertex.h != 0.0) {
-            currVertex = bestMoveSequence.poll();
+            if (currVertex.marked) {
+                currVertex = bestMoveSequence.poll();
+                continue;
+            }
+            currVertex.marked = false;
 
             for (Long vertexID : g.adjacent(currVertex.id)) {
                     neighbor = g.returnCopy(vertexID);
@@ -61,14 +70,15 @@ public class Router {
                  * the start location.
                  */
                 if (!shortestDistToNode.containsKey(vertexID) || distance < shortestDistToNode.get(vertexID)) {
-                        shortestDistToNode.put(neighbor.id, distance);
-                        neighbor.g = distance;
-                        neighbor.h = g.distance(neighbor.id, destID);
-                        neighbor.f = neighbor.g + neighbor.h;
-                        prevNode.put(neighbor.id, currVertex);
-                        bestMoveSequence.add(neighbor);
-                    }
+                    shortestDistToNode.put(neighbor.id, distance);
+                    neighbor.g = distance;
+                    neighbor.h = g.distance(neighbor.id, destID);
+                    neighbor.f = neighbor.g + neighbor.h;
+                    prevNode.put(neighbor.id, currVertex);
+                    bestMoveSequence.add(neighbor);
+                }
             }
+            currVertex = bestMoveSequence.poll();
         }
 
         /**

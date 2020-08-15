@@ -155,7 +155,7 @@ public class GraphDB {
         return new Node(id, lon(id), lat(id));
     }
 
-    public void setName(Long id, String n){
+    public void setName(Long id, String n) {
         Node thisNode = vertices.get(id);
         thisNode.name = n;
     }
@@ -185,18 +185,15 @@ public class GraphDB {
      *  we can reasonably assume this since typically roads are connected.
      */
     private void clean() {
-        // TODO: Your code here.
         List<Long> toDelete = new ArrayList<>();
-
-       for (Long vertexID: vertices.keySet()) {
-           if (!adj.containsKey(vertexID)) {
-               toDelete.add(vertexID);
-           }
-       }
-
-       for (Long vertex: toDelete) {
-           removeNode(vertex);
-       }
+        for (Long vertexID: vertices.keySet()) {
+            if (!adj.containsKey(vertexID)) {
+                toDelete.add(vertexID);
+            }
+        }
+        for (Long vertex: toDelete) {
+            removeNode(vertex);
+        }
     }
 
     /**
@@ -278,7 +275,7 @@ public class GraphDB {
         double minDistance = 100000;
         double currentDistance;
         long vertexID = 0;
-        for (Node vertex: vertices.values()){
+        for (Node vertex: vertices.values()) {
             currentDistance = distance(lon, lat, vertex.lon, vertex.lat);
             if (currentDistance < minDistance) {
                 minDistance = currentDistance;
