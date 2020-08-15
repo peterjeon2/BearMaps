@@ -75,6 +75,9 @@ public class GraphDB {
             this.lat = lat;
             marked = false;
         }
+        public void setName(String n) {
+            this.name = n;
+        }
 
         public boolean equals(Node otherNode) {
             if (otherNode == null) {

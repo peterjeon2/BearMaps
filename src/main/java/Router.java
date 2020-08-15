@@ -1,9 +1,4 @@
-import java.util.List;
-import java.util.Map;
-import java.util.PriorityQueue;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Objects;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -38,7 +33,6 @@ public class Router {
          * shortestDistToNode tracks the best known distance form the source location to
          * every vertex.
          */
-
         PriorityQueue<GraphDB.Node> bestMoveSequence = new PriorityQueue<>();
         Map<Long, GraphDB.Node> prevNode = new HashMap<>();
         Map<Long, Double> shortestDistToNode = new HashMap<>();
@@ -47,6 +41,8 @@ public class Router {
         Long startID = g.closest(stlon, stlat);
         Long destID = g.closest(destlon, destlat);
         GraphDB.Node currVertex = g.returnCopy(startID);
+        GraphDB.Node destVertex = g.returnCopy(destID);
+
 
         currVertex.g = 0.0;
         currVertex.h = g.distance(startID, destID);
@@ -56,29 +52,27 @@ public class Router {
         GraphDB.Node neighbor;
 
 
-        while (currVertex.h != 0.0) {
-            if (currVertex.marked) {
-                currVertex = bestMoveSequence.poll();
-                continue;
-            }
+        while (!bestMoveSequence.isEmpty()) {
+            currVertex = bestMoveSequence.poll();
 
             /**
              * Mark a vertex once you have visited it to reduce the number of times
              * the same vertex is enqueued onto the priority queue.
              */
+            if (currVertex.h == 0.0) {
+                break;
+            }
 
             currVertex.marked = true;
             for (Long vertexID : g.adjacent(currVertex.id)) {
                 neighbor = g.returnCopy(vertexID);
                 double distance = currVertex.g + g.distance(currVertex.id, neighbor.id);
-
                 /** Adds a neighboring vertex to the priority queue if it's never
                  * been visited before, or if it has the shortest known path distance from
                  * the start location.
                  */
-
                 if (!shortestDistToNode.containsKey(vertexID)
-                        ||  distance < shortestDistToNode.get(vertexID)) {
+                        || (!neighbor.marked && distance < shortestDistToNode.get(vertexID))) {
                     shortestDistToNode.put(neighbor.id, distance);
                     neighbor.g = distance;
                     neighbor.h = g.distance(neighbor.id, destID);
@@ -87,14 +81,11 @@ public class Router {
                     bestMoveSequence.add(neighbor);
                 }
             }
-            currVertex = bestMoveSequence.poll();
-
         }
 
         /**
          * Stores the shorted path in a LinkedList and returns it.
          */
-
         shortestPath = new LinkedList<>();
         while (currVertex != null) {
             shortestPath.addFirst(currVertex.id);
@@ -116,7 +107,8 @@ public class Router {
      * route.
      */
     public static List<NavigationDirection> routeDirections(GraphDB g, List<Long> route) {
-        return null; // FIXME
+        List<NavigationDirection> directions = new ArrayList<>();
+        return null;
     }
 
 
