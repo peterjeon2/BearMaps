@@ -2,7 +2,6 @@ import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Map;
 import java.util.HashMap;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Objects;
 import java.util.regex.Matcher;
@@ -39,6 +38,7 @@ public class Router {
          * shortestDistToNode tracks the best known distance form the source location to
          * every vertex.
          */
+
         PriorityQueue<GraphDB.Node> bestMoveSequence = new PriorityQueue<>();
         Map<Long, GraphDB.Node> prevNode = new HashMap<>();
         Map<Long, Double> shortestDistToNode = new HashMap<>();
@@ -47,8 +47,6 @@ public class Router {
         Long startID = g.closest(stlon, stlat);
         Long destID = g.closest(destlon, destlat);
         GraphDB.Node currVertex = g.returnCopy(startID);
-        GraphDB.Node destVertex = g.returnCopy(destID);
-
 
         currVertex.g = 0.0;
         currVertex.h = g.distance(startID, destID);
@@ -65,6 +63,7 @@ public class Router {
              * Mark a vertex once you have visited it to reduce the number of times
              * the same vertex is enqueued onto the priority queue.
              */
+
             if (currVertex.h == 0.0) {
                 break;
             }
@@ -73,10 +72,12 @@ public class Router {
             for (Long vertexID : g.adjacent(currVertex.id)) {
                 neighbor = g.returnCopy(vertexID);
                 double distance = currVertex.g + g.distance(currVertex.id, neighbor.id);
+
                 /** Adds a neighboring vertex to the priority queue if it's never
                  * been visited before, or if it has the shortest known path distance from
                  * the start location.
                  */
+
                 if (!shortestDistToNode.containsKey(vertexID)
                         || (!neighbor.marked && distance < shortestDistToNode.get(vertexID))) {
                     shortestDistToNode.put(neighbor.id, distance);
@@ -92,6 +93,7 @@ public class Router {
         /**
          * Stores the shorted path in a LinkedList and returns it.
          */
+
         shortestPath = new LinkedList<>();
         while (currVertex != null) {
             shortestPath.addFirst(currVertex.id);
@@ -113,8 +115,27 @@ public class Router {
      * route.
      */
     public static List<NavigationDirection> routeDirections(GraphDB g, List<Long> route) {
-        List<NavigationDirection> directions = new ArrayList<>();
         return null;
+    }
+
+    public static int calculateDirection(GraphDB g, Long v, Long w) {
+        double bearing = g.bearing(v, w);
+        if (bearing <= 15 && bearing >= -15) {
+            return NavigationDirection.STRAIGHT; /* return straight */
+        } else if (bearing >= -30 && bearing < -15) {
+            return NavigationDirection.SLIGHT_LEFT; /* return slight left */
+        } else if (bearing > 15 && bearing <= 30) {
+            return NavigationDirection.SLIGHT_RIGHT; /* return slight right */
+        } else if (bearing > 30 && bearing <= 100) {
+            return NavigationDirection.RIGHT; /* return right */
+        } else if (bearing >= -100 && bearing < -30) {
+            return NavigationDirection.LEFT; /* return left */
+        } else if (bearing < -100) {
+            return NavigationDirection.SHARP_LEFT; /* return sharp left */
+        } else if (bearing > 100) {
+            return NavigationDirection.SHARP_RIGHT; /* return sharp right */
+        }
+        return NavigationDirection.START; /* return start as default */
     }
 
 

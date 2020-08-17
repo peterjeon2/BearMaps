@@ -75,9 +75,6 @@ public class GraphDB {
             this.lat = lat;
             marked = false;
         }
-        public void setName(String n) {
-            this.name = n;
-        }
 
         public boolean equals(Node otherNode) {
             if (otherNode == null) {
@@ -155,21 +152,26 @@ public class GraphDB {
     }
 
     public Node returnCopy(Long id) {
-        return new Node(id, lon(id), lat(id));
+        Node n = new Node(id, lon(id), lat(id));
+        n.name = vertices.get(id).name;
+        return n;
     }
 
     public void setName(Long id, String n) {
-        Node thisNode = vertices.get(id);
-        thisNode.name = n;
+        vertices.get(id).name = n;
     }
 
     public void addWay(Way way) {
         for (int i = 0; i < way.nodeIds.size() - 1; i++) {
             Long curr = way.nodeIds.get(i);
             Long next = way.nodeIds.get(i + 1);
+            Node currVertex = vertices.get(curr);
+            Node nextVertex = vertices.get(next);
+            addEdge(currVertex, nextVertex);
+            addEdge(nextVertex, currVertex);
+            currVertex.name = way.name;
+            nextVertex.name = way.name;
 
-            addEdge(vertices.get(curr), vertices.get(next));
-            addEdge(vertices.get(next), vertices.get(curr));
         }
     }
 

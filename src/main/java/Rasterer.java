@@ -189,7 +189,7 @@ public class Rasterer {
         if (ulLAT < lrLAT || ulLON > lrLON) {
             return false;
         }
-        return !(ulLON < MapServer.ROOT_ULLON || lrLON > MapServer.ROOT_LRLON
-                || ulLAT > MapServer.ROOT_ULLAT || lrLAT < MapServer.ROOT_LRLON);
+        return !(ulLON < MapServer.ROOT_ULLON && lrLON > MapServer.ROOT_LRLON
+                && ulLAT > MapServer.ROOT_ULLAT && lrLAT < MapServer.ROOT_LRLON);
     }
 }
