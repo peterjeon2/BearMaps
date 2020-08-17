@@ -21,4 +21,4 @@ faster than the staff solution.
 # Deployment Instructions 
 In order to view the project, please refer to the build instructions in the project spec. The project uses apache maven as its build system and integrates with IntelliJ. Run MapServer.java and type in localhost:4567 into your browser.
 
-Heroku Deployment hopefully coming soon.
+Heroku Deployment to come in the future.
